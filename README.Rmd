@@ -4,23 +4,52 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, error = FALSE)
+library(tidyverse)
 library(raster)
 # if GeoStratR is not installed run devtools::install_github("Sustainscapes/GeoStratR")
 library(GeoStratR)
+library(sf)
 ```
 
 ## Datasets to be used
 
 In order to include Vegetation complexity and wetness in the startification the following layers were used:
 
-* vegetation height
-* vegetation density
-* vegetation openness
-* TWI
+* vegetation height ("O:/Nat_Ecoinformatics-tmp/au634851/dk_lidar_backup_2021-06-28/canopy_height")
+* vegetation density ("O:/Nat_Ecoinformatics-tmp/au634851/dk_lidar_backup_2021-06-28/vegetation_density")
+* vegetation openness (""O:/Nat_Ecoinformatics-tmp/au634851/dk_lidar_backup_2021-06-28/openness_mean")
+* TWI (""O:/Nat_Ecoinformatics-tmp/au634851/dk_lidar_backup_2021-06-28/twi")
+
+Which resulted in this stack
+
+```{r}
+Vars <- readRDS("Variables.rds")
+plot(Vars)
+```
 
 
 ## Packages used
 
-The `raster` package was used for layer processing and the package `GeoStratR` was used for the stratification of the site.
+The `raster` package was used for layer processing, sf for managing shapefiles and the package `GeoStratR` was used for the stratification of the site,
+
+## Raster preparation
+
+The preparation of rasters was made in the 'Prepare_rasters.r' in order to get all the rasters in the same resolution and crs 
+
+## Stratification
+
+The `Stratify` function from GeoSratR was used in order to test the best stratification from 2 to 10 groups, with the following results
+
+```{r, cache = TRUE, message=FALSE, warning=FALSE}
+set.seed(2020)
+Results <- GeoStratR::Stratify(Vars)
+```
+
+In the graph bellow we can see that the number of classes that best captures the variablity is `r Results$Results %>% dplyr::filter(calinski == max(calinski)) %>% pull(n_groups)` as seen in the following graph
+
+```{r}
+ggplot(Results$Results, aes(x = n_groups, y = calinski)) + geom_point() + geom_path() + theme_bw() + labs(x = "Number of clusters", y = "Calinski index")
+```
+
 
