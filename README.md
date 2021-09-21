@@ -39,3 +39,45 @@ In the graph bellow we can see that the number of classes that best
 captures the variablity is 3 as seen in the following graph
 
 ![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+The Resulting raster of classes is the following:
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+Which leads to the following number of cells per class:
+
+| Class |    n |
+| :---- | ---: |
+| A     | 2633 |
+| B     | 3189 |
+| C     | 6288 |
+
+## Sampling desing
+
+With the following code we will generate 20 random points for sampling
+withing each class:
+
+``` r
+#set seed for reproducibility
+set.seed(2021)
+# Take the final raster
+Sampling <- FinalStackDF %>% 
+  ## Divide it by classes
+  group_split(Class) %>% 
+  ## get 20 random points
+  purrr::map(slice_sample, n = 20) %>% 
+  ## join everything
+  purrr::reduce(bind_rows) %>% 
+  ## Select the relevant variables
+  dplyr::select(x,y, Class) %>% 
+  ## transform to a spatial object
+  st_as_sf(coords = c("x", "y"), crs = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs")
+```
+
+Which can be seen here:
+
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+    ## NULL
+
+The sampling points are available in the `Sampling` folder
