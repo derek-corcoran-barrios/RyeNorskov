@@ -75,7 +75,7 @@ Experimental <- Random_Stratified_Min_Dist(ClassRaster = FinalStack,
 
     ## 
     ##  A  B  C 
-    ## 10  6 10
+    ## 10  3 10
 
 Which can be seen here:
 
