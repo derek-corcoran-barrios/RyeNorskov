@@ -6,13 +6,13 @@ Site selection for Rye Nørskov
 In order to include Vegetation complexity and wetness in the
 startification the following layers were used:
 
-  - vegetation height
+-   vegetation height
     (“O:/Nat\_Ecoinformatics-tmp/au634851/dk\_lidar\_backup\_2021-06-28/canopy\_height”)
-  - vegetation density
+-   vegetation density
     (“O:/Nat\_Ecoinformatics-tmp/au634851/dk\_lidar\_backup\_2021-06-28/vegetation\_density”)
-  - vegetation openness
+-   vegetation openness
     ("“O:/Nat\_Ecoinformatics-tmp/au634851/dk\_lidar\_backup\_2021-06-28/openness\_mean”)
-  - TWI
+-   TWI
     ("“O:/Nat\_Ecoinformatics-tmp/au634851/dk\_lidar\_backup\_2021-06-28/twi”)
 
 Which resulted in this stack
@@ -47,37 +47,42 @@ The Resulting raster of classes is the following:
 Which leads to the following number of cells per class:
 
 | Class |    n |
-| :---- | ---: |
+|:------|-----:|
 | A     | 2633 |
 | B     | 3189 |
 | C     | 6288 |
 
 ## Sampling desing
 
-With the following code we will generate 20 random points for sampling
-withing each class:
+### Experimental plots
+
+First we will generate 4 experimental plot groups at each class,
+consisting of a fenced 20 by 20 meter point and and accompaning
+monitoring plot. In order to do that we will generate 4 random points
+with at least 40 meters from each other and from the border using the
+`Random_Stratified_Min_Dist` function from the `GeoStratR` package:
 
 ``` r
 #set seed for reproducibility
-set.seed(2021)
-# Take the final raster
-Sampling <- FinalStackDF %>% 
-  ## Divide it by classes
-  group_split(Class) %>% 
-  ## get 20 random points
-  purrr::map(slice_sample, n = 20) %>% 
-  ## join everything
-  purrr::reduce(bind_rows) %>% 
-  ## Select the relevant variables
-  dplyr::select(x,y, Class) %>% 
-  ## transform to a spatial object
-  st_as_sf(coords = c("x", "y"), crs = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs")
+
+
+  set.seed(2021)
+Experimental <- Random_Stratified_Min_Dist(ClassRaster = FinalStack,
+                           MinDist = 40,
+                           n = 10,
+                           n_to_test = 700)
 ```
+
+    ## 
+    ##  A  B  C 
+    ## 10  6 10
 
 Which can be seen here:
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
     ## NULL
 
 The sampling points are available in the `Sampling` folder
+
+    ## Warning in dir.create("Sampling"): 'Sampling' already exists

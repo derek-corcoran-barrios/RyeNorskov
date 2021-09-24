@@ -85,40 +85,43 @@ FinalStackDF %>% group_by(Class) %>% summarise(n = n()) %>% knitr::kable()
 
 ## Sampling desing
 
-With the following code we will generate 20 random points for sampling withing each class:
+### Experimental plots
+
+First we will generate 4 experimental plot groups at each class, consisting of a fenced 20 by 20 meter point and and accompaning monitoring plot. In order to do that we will generate 4 random points with at least 40 meters from each other and from the border using the `Random_Stratified_Min_Dist` function from the `GeoStratR` package:
+
 
 ```{r, echo=T}
 #set seed for reproducibility
-set.seed(2021)
-# Take the final raster
-Sampling <- FinalStackDF %>% 
-  ## Divide it by classes
-  group_split(Class) %>% 
-  ## get 20 random points
-  purrr::map(slice_sample, n = 20) %>% 
-  ## join everything
-  purrr::reduce(bind_rows) %>% 
-  ## Select the relevant variables
-  dplyr::select(x,y, Class) %>% 
-  ## transform to a spatial object
-  st_as_sf(coords = c("x", "y"), crs = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs")
+
+
+  set.seed(2021)
+Experimental <- Random_Stratified_Min_Dist(ClassRaster = FinalStack,
+                           MinDist = 40,
+                           n = 10,
+                           n_to_test = 700)
+
 ```
+```{r}
+table(Experimental$Class)
+```
+
 
 Which can be seen here:
 
 ```{r}
 ggplot() + 
   geom_sf(data = RyeNoskov) +
-  geom_sf(data = Sampling, aes(color = Class))
+  geom_sf(data = Experimental, aes(color = Class))
   labs(x = NULL, y = NULL) +
   theme_bw()
 ```
 
 The sampling points are available in the `Sampling` folder
 
+
 ```{r}
 dir.create("Sampling")
 
-write_sf(Sampling, "Sampling/Sampling.shp")
+write_sf(Experimental, "Sampling/Experimental.shp")
 ```
 
