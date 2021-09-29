@@ -97,7 +97,8 @@ Classes <- Classes %>% st_transform(crs = st_crs(AllData))
 Adds <- list(c(15,0), c(0,15), c(-15,0), c(0,-15))
 
 Areas <- list()
-
+Cents <- list()
+ 
 for(i in 1:nrow(AllData)){
   Temp <- AllData[i,]
   Centroid <- st_centroid(Temp)
@@ -114,13 +115,30 @@ for(i in 1:nrow(AllData)){
   }
   
   CopyColumns <- Temp %>% as.data.frame() %>% dplyr::select(-geometry)
-  Tb_shift_circle <- Tb_shift_circle %>% cbind(CopyColumns)
+  Tb_shift_circle <- Tb_shift_circle %>% 
+    cbind(CopyColumns) %>% 
+    mutate(ID = paste("M", ID, sep = "_"))
+  
+  Temp <- Temp %>%  
+    mutate(ID = paste("E", ID, sep = "_"))
+  
   Areas[[i]] <- rbind(Temp, Tb_shift_circle)
   CopyColumns <- Areas[[i]] %>% as.data.frame() %>% dplyr::select(-geometry) %>% dplyr::distinct()
-  Areas[[i]] <- Areas[[i]] %>% st_union() %>% st_as_sf(crs = st_crs(AllData))
-  Areas[[i]] <- Areas[[i]] %>% cbind(CopyColumns)
+  Cents[[i]] <- Areas[[i]] %>% st_centroid() %>% st_as_sf(crs = st_crs(AllData))
+  Cents[[i]] <- Cents[[i]] %>% cbind(CopyColumns)
 }
 
 Areas <- Areas %>% reduce(rbind)
-
+Cents <- Cents %>% reduce(rbind)
 sf::write_sf(Areas, "Sampling/Ranked.shp")
+
+Cents <- Cents %>% 
+  st_transform(crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+coordins <- st_coordinates(Cents) %>% as.data.frame() %>% magrittr::set_names(c("Lon", "Lat"))
+
+Cents <- Cents %>% cbind(coordins) %>% 
+  st_transform(crs = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs") %>% 
+  dplyr::select(ID, Class, Lon, Lat)
+
+sf::write_sf(Areas, "Sampling/Final_Centroids.shp")
