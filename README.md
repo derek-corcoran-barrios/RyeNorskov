@@ -48,16 +48,16 @@ Which leads to the following number of cells per class:
 
 | Class |    n |
 |:------|-----:|
-| A     | 2633 |
-| B     | 3189 |
-| C     | 6288 |
+| A     | 3122 |
+| B     | 1382 |
+| C     | 5848 |
 
 ## Sampling desing
 
 ### Experimental plots
 
 First we will generate 4 experimental plot groups at each class,
-consisting of a fenced 20 by 20 meter point and and accompaning
+consisting of a fenced 15 by 15 meter point and and accompaning
 monitoring plot. In order to do that we will generate 4 random points
 with at least 40 meters from each other and from the border using the
 `Random_Stratified_Min_Dist` function from the `GeoStratR` package:
@@ -66,16 +66,17 @@ with at least 40 meters from each other and from the border using the
 #set seed for reproducibility
 
 
-  set.seed(2021)
+set.seed(2021)
+
 Experimental <- Random_Stratified_Min_Dist(ClassRaster = FinalStack,
-                           MinDist = 40,
+                           MinDist = 20,
                            n = 10,
                            n_to_test = 700)
 ```
 
     ## 
     ##  A  B  C 
-    ## 10  3 10
+    ## 10 10 10
 
 Which can be seen here:
 
@@ -86,3 +87,9 @@ Which can be seen here:
 The sampling points are available in the `Sampling` folder
 
     ## Warning in dir.create("Sampling"): 'Sampling' already exists
+
+Ranked plots
+
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+    ## NULL

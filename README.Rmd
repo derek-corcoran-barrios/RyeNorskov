@@ -25,7 +25,22 @@ Which resulted in this stack
 
 ```{r}
 Vars <- readRDS("Variables.rds")
-plot(Vars)
+
+
+Mask <- read_sf("ShapeFiles/RyeNoerskov_mask.shp") %>% 
+  st_transform(crs = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs") %>% 
+  fasterize::fasterize(Vars[[1]])
+
+## generate a mask to eliminate unwanted polygons
+values(Mask) <- ifelse(is.na(values(Mask)), 1, NA)
+
+# modify Vars with the mask
+
+Vars <- Vars*Mask
+names(Vars) <- c("vegetation_density", "canopy_height", "openness_mean", "twi")
+
+plot(Vars, colNA = "black")
+
 ```
 
 
@@ -62,6 +77,8 @@ RyeNoskov <- read_sf("ShapeFiles/RyeNoerskov.shp") %>%
 
 FinalStack <- Results$FinalStack
 
+saveRDS(FinalStack, "FinalStack.rds")
+
 FinalStackDF <- FinalStack %>% 
   as("SpatialPixelsDataFrame") %>% 
   as.data.frame() %>% 
@@ -87,20 +104,22 @@ FinalStackDF %>% group_by(Class) %>% summarise(n = n()) %>% knitr::kable()
 
 ### Experimental plots
 
-First we will generate 4 experimental plot groups at each class, consisting of a fenced 20 by 20 meter point and and accompaning monitoring plot. In order to do that we will generate 4 random points with at least 40 meters from each other and from the border using the `Random_Stratified_Min_Dist` function from the `GeoStratR` package:
+First we will generate 4 experimental plot groups at each class, consisting of a fenced 15 by 15 meter point and and accompaning monitoring plot. In order to do that we will generate 4 random points with at least 40 meters from each other and from the border using the `Random_Stratified_Min_Dist` function from the `GeoStratR` package:
 
 
 ```{r, echo=T}
 #set seed for reproducibility
 
 
-  set.seed(2021)
+set.seed(2021)
+
 Experimental <- Random_Stratified_Min_Dist(ClassRaster = FinalStack,
-                           MinDist = 40,
+                           MinDist = 20,
                            n = 10,
                            n_to_test = 700)
 
 ```
+
 ```{r}
 table(Experimental$Class)
 ```
@@ -125,3 +144,14 @@ dir.create("Sampling")
 write_sf(Experimental, "Sampling/Experimental.shp")
 ```
 
+Ranked plots
+
+```{r}
+Final <- read_sf("Sampling/Ranked.shp")
+
+ggplot() + 
+  geom_sf(data = RyeNoskov) +
+  geom_sf(data = Final, aes(color = Class))
+  labs(x = NULL, y = NULL) +
+  theme_bw()
+```
